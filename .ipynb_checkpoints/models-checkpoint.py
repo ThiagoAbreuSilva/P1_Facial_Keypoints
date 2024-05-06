@@ -14,7 +14,7 @@ def conv_block(in_channels, out_channels, kernel_size, dropout_prob=0.5):
     return nn.Sequential(
         
         nn.Conv2d(in_channels, out_channels, kernel_size),
-#        nn.BatchNorm2d(out_channels),
+        nn.BatchNorm2d(out_channels),
         nn.ELU(),
         nn.Dropout(dropout_prob),
         nn.MaxPool2d(2, dilation=1)
@@ -35,55 +35,19 @@ def fc_block_1(input_size, output_size, dropout_prob=0.5):
     )
     return block
 
-
 def fc_block_2(input_size, output_size, dropout_prob=0.5):
     block = nn.Sequential(
 #         Flatten(),               # Flatten Layer
         nn.Linear(input_size, output_size),  # Fully connected (Dense) Layer
-#        CustomizedTanh(input_width),  # CustomizedTanh Activation 
 #         nn.ELU(),                   # ELU Activation
-#        nn.Tanh(), # Tanh Activation
         nn.Dropout(p=dropout_prob)  # Dropout
     )
     return block
 
-
-# class CustomizedELU(nn.Module): 
-#    def __init__(self): 
-#        super(CustomizedELU, self).__init__() 
-#  
-#    def forward(self, x): 
-#        return nn.ELU()(x) + 1  # Apply ELU and then add 1
-
-class CustomizedSigmoid(nn.Module): 
-    def __init__(self, input_width): 
-        super(CustomizedSigmoid, self).__init__() 
-        self.input_width = input_width
-  
-    def forward(self, x): 
-        return ((nn.Sigmoid()(x)*3) - 1)*self.input_width # #### Here I am forcing the output to range from -1*input_width to 2*input_width to account for situations when only part of the faces are shown at the edges of the images 
-#        return ((nn.Tanh()(x)*1.5) + 0.5)*self.input_width # #### Here I am forcing the output to range from -input_width to 2*input_width to account for situations when only part of the faces are shown at the edges of the images 
-#        return (nn.Tanh()(x) + 1)*0.5*self.input_width # #### Here I am forcing the output to range from -0.5*input_width to 1.5*input_width to account for situations when only part of the faces are shown at the edges of the images 
-
-
-class CustomizedTanh(nn.Module): 
-    def __init__(self, input_width): 
-        super(CustomizedTanh, self).__init__() 
-        self.input_width = input_width
-  
-    def forward(self, x): 
-        return ((nn.Tanh()(x)*4) + 0.5)*self.input_width # #### Here I am forcing the output to range from -3.5*input_width to 4.5*input_width to account for situations when only part of the faces are shown at the edges of the images 
-#        return ((nn.Tanh()(x)*1.5) + 0.5)*self.input_width # #### Here I am forcing the output to range from -input_width to 2*input_width to account for situations when only part of the faces are shown at the edges of the images 
-#        return (nn.Tanh()(x) + 1)*0.5*self.input_width # #### Here I am forcing the output to range from -0.5*input_width to 1.5*input_width to account for situations when only part of the faces are shown at the edges of the images 
-
-def fc_block_3(input_size, output_size, input_width):
+def fc_block_3(input_size, output_size):
     block = nn.Sequential(
 #         Flatten(),               # Flatten Layer
         nn.Linear(input_size, output_size),  # Fully connected (Dense) Layer
-#        CustomizedTanh(input_width),  # CustomizedTanh Activation 
-        CustomizedSigmoid(input_width),  # CustomizedSigmoid Activation 
-#        CustomizedELU(),  # Customized ELU Activation
-#        nn.Hardtanh(min_val=0, max_val=1.0), # Hardtanh Activation
 #         nn.ELU(),                   # ELU Activation
 #         nn.Dropout(p=dropout_prob)  # Dropout
     )
@@ -102,6 +66,7 @@ def compute_output_width(input_width = 96, conv_kernel_size = 3, conv_stride = 1
     
     return output_width
 
+# +
 class Net(nn.Module):
 
     def __init__(self):
@@ -116,7 +81,7 @@ class Net(nn.Module):
         # 1 input image channel (grayscale), 32 output channels/feature maps, 5x5 square convolution kernel
 #         self.conv1 = nn.Conv2d(1, 32, 5
 
-#         input_width = 96
+        #         input_width = 96
         input_width = 224
         
         conv2D_depth_in = 1
@@ -147,17 +112,15 @@ class Net(nn.Module):
 #         print("conv2D_depth_out after 4th conv block = "+str(conv2D_depth_out))
 #         print("output_width after 4th conv block = "+str(output_width))
 
+
 #         input_size = conv2D_depth*output_width*output_width
 #         print("input_size = "+str(input_size))
-#         self.fc1 = fc_block_1(conv2D_depth_out*output_width*output_width , 1000, 0.5)
-
         
-    
         self.fc1 = fc_block_1(conv2D_depth_out*output_width*output_width , 1000, 0.5)
         
         self.fc2 = fc_block_2(1000 , 1000, 0.6)
         
-        self.fc3 = fc_block_3(1000 , 2*68, input_width)
+        self.fc3 = fc_block_3(1000 , 2*68)
 
         self.last_conv_block_depth = conv2D_depth_out
         
@@ -167,6 +130,17 @@ class Net(nn.Module):
         # maxpooling layers, multiple conv layers, fully-connected layers, and other layers (such as dropout or batch normalization) to avoid overfitting
         
     
+# -
+
+
+
+#         input_size = conv2D_depth*output_width*output_width
+#         print("input_size = "+str(input_size))
+#         self.fc1 = fc_block_1(conv2D_depth_out*output_width*output_width , 1000, 0.5)
+
+        
+    
+        
         
         
         
